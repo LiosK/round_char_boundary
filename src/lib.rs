@@ -51,6 +51,8 @@ impl StrExt for str {
         if index >= self.len() {
             self.len()
         } else {
+            // Unlike `ceil_char_boundary`, the loop is unrolled manually to prevent the compiler
+            // from generating excessive unrolled loop bodies when `index` is statically known.
             let mut i = index;
             if i > 0 && !self.as_bytes()[i].is_utf8_char_boundary() {
                 i -= 1;
@@ -73,18 +75,18 @@ impl StrExt for str {
     fn ceil_char_boundary_unrolled(&self, index: usize) -> usize {
         if index >= self.len() {
             self.len()
-        } else if self.as_bytes()[index].is_utf8_char_boundary() {
-            index
         } else {
-            let mut i = index + 1;
-            if i < self.len() && !self.as_bytes()[i].is_utf8_char_boundary() {
+            let mut i = index;
+            while !self.as_bytes()[i].is_utf8_char_boundary() {
                 i += 1;
-                if i < self.len() && !self.as_bytes()[i].is_utf8_char_boundary() {
-                    i += 1;
-                    // The character boundary will be within four bytes of the index
-                    debug_assert!(i == self.len() || self.as_bytes()[i].is_utf8_char_boundary());
+                if i >= self.len() {
+                    break;
                 }
             }
+
+            // The character boundary will be within four bytes of the index
+            debug_assert!(i <= index + 3);
+
             i
         }
     }
