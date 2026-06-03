@@ -1,3 +1,5 @@
+use core::hint::assert_unchecked;
+
 const N: usize = 20;
 
 #[unsafe(no_mangle)]
@@ -54,12 +56,18 @@ impl StrExt for str {
             // Unlike `ceil_char_boundary`, the loop is unrolled manually to prevent the compiler
             // from generating excessive unrolled loop bodies when `index` is statically known.
             let mut i = index;
-            if i > 0 && !self.as_bytes()[i].is_utf8_char_boundary() {
+            // The first byte of `&str` must always be a char boundary, so we can assume `i > 0`
+            // below if `self.as_bytes()[i]` is not a char boundary.
+            debug_assert!(self.as_bytes()[0].is_utf8_char_boundary());
+            if !self.as_bytes()[i].is_utf8_char_boundary() {
+                // SAFETY: `self.as_bytes()[0]` is always a char boundary with valid `&str`
+                unsafe { assert_unchecked(i > 0) };
                 i -= 1;
-                if i > 0 && !self.as_bytes()[i].is_utf8_char_boundary() {
+                if !self.as_bytes()[i].is_utf8_char_boundary() {
+                    // SAFETY: `self.as_bytes()[0]` is always a char boundary with valid `&str`
+                    unsafe { assert_unchecked(i > 0) };
                     i -= 1;
                     if !self.as_bytes()[i].is_utf8_char_boundary() {
-                        // `&self[0]` will always be a char boundary with valid UTF-8
                         debug_assert!(i > 0);
                         i -= 1;
                         // The character boundary will be within four bytes of the index
