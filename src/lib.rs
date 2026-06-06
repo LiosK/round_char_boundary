@@ -38,8 +38,8 @@ pub fn ceil_runtime_std(s: &str, index: usize) -> usize {
 }
 
 #[unsafe(no_mangle)]
-pub fn ceil_runtime_unrolled(s: &str, index: usize) -> usize {
-    s.ceil_char_boundary_unrolled(index)
+pub fn ceil_runtime_loop(s: &str, index: usize) -> usize {
+    s.ceil_char_boundary_loop(index)
 }
 
 #[unsafe(no_mangle)]
@@ -48,14 +48,14 @@ pub fn ceil_const_std(s: &str) -> usize {
 }
 
 #[unsafe(no_mangle)]
-pub fn ceil_const_unrolled(s: &str) -> usize {
-    s.ceil_char_boundary_unrolled(N)
+pub fn ceil_const_loop(s: &str) -> usize {
+    s.ceil_char_boundary_loop(N)
 }
 
 trait StrExt {
     fn floor_char_boundary_unrolled(&self, index: usize) -> usize;
     fn floor_char_boundary_mask(&self, index: usize) -> usize;
-    fn ceil_char_boundary_unrolled(&self, index: usize) -> usize;
+    fn ceil_char_boundary_loop(&self, index: usize) -> usize;
 }
 
 impl StrExt for str {
@@ -134,7 +134,7 @@ impl StrExt for str {
     }
 
     #[inline]
-    fn ceil_char_boundary_unrolled(&self, index: usize) -> usize {
+    fn ceil_char_boundary_loop(&self, index: usize) -> usize {
         if index >= self.len() {
             self.len()
         } else {
@@ -174,11 +174,11 @@ fn compare_with_std() {
     for i in 0..(s.len() + 8) {
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_unrolled(i));
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_mask(i));
-        assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_unrolled(i));
+        assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_loop(i));
 
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_unrolled(i));
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_mask(i));
-        assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_unrolled(i));
+        assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_loop(i));
     }
 }
 
@@ -250,9 +250,9 @@ fn ceil_char_boundary_test_adapted_from_std() {
     fn check_many(s: &str, arg: impl IntoIterator<Item = usize>, ret: usize) {
         for idx in arg {
             assert_eq!(
-                s.ceil_char_boundary_unrolled(idx),
+                s.ceil_char_boundary_loop(idx),
                 ret,
-                "{:?}.ceil_char_boundary_unrolled({:?}) != {:?}",
+                "{:?}.ceil_char_boundary_loop({:?}) != {:?}",
                 s,
                 idx,
                 ret
