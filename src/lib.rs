@@ -181,3 +181,122 @@ fn compare_with_std() {
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_unrolled(i));
     }
 }
+
+#[cfg(test)]
+#[test]
+fn floor_char_boundary_test_adapted_from_std() {
+    fn check_many(s: &str, arg: impl IntoIterator<Item = usize>, ret: usize) {
+        for idx in arg {
+            assert_eq!(
+                s.floor_char_boundary_unrolled(idx),
+                ret,
+                "{:?}.floor_char_boundary_unrolled({:?}) != {:?}",
+                s,
+                idx,
+                ret
+            );
+            assert_eq!(
+                s.floor_char_boundary_mask(idx),
+                ret,
+                "{:?}.floor_char_boundary_mask({:?}) != {:?}",
+                s,
+                idx,
+                ret
+            );
+        }
+    }
+
+    // edge case
+    check_many("", [0, 1, isize::MAX as usize, usize::MAX], 0);
+
+    // basic check
+    check_many("x", [0], 0);
+    check_many("x", [1, isize::MAX as usize, usize::MAX], 1);
+
+    // 1-byte chars
+    check_many("jp", [0], 0);
+    check_many("jp", [1], 1);
+    check_many("jp", 2..4, 2);
+
+    // 2-byte chars
+    check_many("ĵƥ", 0..2, 0);
+    check_many("ĵƥ", 2..4, 2);
+    check_many("ĵƥ", 4..6, 4);
+
+    // 3-byte chars
+    check_many("日本", 0..3, 0);
+    check_many("日本", 3..6, 3);
+    check_many("日本", 6..8, 6);
+
+    // 4-byte chars
+    check_many("🇯🇵", 0..4, 0);
+    check_many("🇯🇵", 4..8, 4);
+    check_many("🇯🇵", 8..10, 8);
+
+    // anticipate length- and index-based specializations
+    let s = "jpĵƥ日本🇯🇵jpĵƥ日本🇯🇵";
+    let expected = [
+        0, 1, 2, 2, 4, 4, 6, 6, 6, 9, 9, 9, 12, 12, 12, 12, 16, 16, 16, 16, 20, 21, 22, 22, 24, 24,
+        26, 26, 26, 29, 29, 29, 32, 32, 32, 32, 36, 36, 36, 36, 40, 40, 40, 40,
+    ];
+    for (idx, &ret) in expected.iter().enumerate() {
+        check_many(s, [idx], ret);
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn ceil_char_boundary_test_adapted_from_std() {
+    fn check_many(s: &str, arg: impl IntoIterator<Item = usize>, ret: usize) {
+        for idx in arg {
+            assert_eq!(
+                s.ceil_char_boundary_unrolled(idx),
+                ret,
+                "{:?}.ceil_char_boundary_unrolled({:?}) != {:?}",
+                s,
+                idx,
+                ret
+            );
+        }
+    }
+
+    // edge case
+    check_many("", [0], 0);
+
+    // basic check
+    check_many("x", [0], 0);
+    check_many("x", [1], 1);
+
+    // 1-byte chars
+    check_many("jp", [0], 0);
+    check_many("jp", [1], 1);
+    check_many("jp", [2], 2);
+
+    // 2-byte chars
+    check_many("ĵƥ", 0..=0, 0);
+    check_many("ĵƥ", 1..=2, 2);
+    check_many("ĵƥ", 3..=4, 4);
+
+    // 3-byte chars
+    check_many("日本", 0..=0, 0);
+    check_many("日本", 1..=3, 3);
+    check_many("日本", 4..=6, 6);
+
+    // 4-byte chars
+    check_many("🇯🇵", 0..=0, 0);
+    check_many("🇯🇵", 1..=4, 4);
+    check_many("🇯🇵", 5..=8, 8);
+
+    // above len
+    check_many("hello", 5..=10, 5);
+
+    // anticipate length- and index-based specializations
+    let s = "jpĵƥ日本🇯🇵jpĵƥ日本🇯🇵";
+    let expected = [
+        0, 1, 2, 4, 4, 6, 6, 9, 9, 9, 12, 12, 12, 16, 16, 16, 16, 20, 20, 20, 20, 21, 22, 24, 24,
+        26, 26, 29, 29, 29, 32, 32, 32, 36, 36, 36, 36, 40, 40, 40, 40, 40, 40, 40,
+    ];
+    for (idx, &ret) in expected.iter().enumerate() {
+        check_many(s, [idx], ret);
+    }
+}
