@@ -13,6 +13,11 @@ pub fn floor_runtime_unrolled(s: &str, index: usize) -> usize {
 }
 
 #[unsafe(no_mangle)]
+pub fn floor_runtime_mask(s: &str, index: usize) -> usize {
+    s.floor_char_boundary_mask(index)
+}
+
+#[unsafe(no_mangle)]
 pub fn floor_const_std(s: &str) -> usize {
     s.floor_char_boundary(N)
 }
@@ -20,6 +25,11 @@ pub fn floor_const_std(s: &str) -> usize {
 #[unsafe(no_mangle)]
 pub fn floor_const_unrolled(s: &str) -> usize {
     s.floor_char_boundary_unrolled(N)
+}
+
+#[unsafe(no_mangle)]
+pub fn floor_const_mask(s: &str) -> usize {
+    s.floor_char_boundary_mask(N)
 }
 
 #[unsafe(no_mangle)]
@@ -44,6 +54,7 @@ pub fn ceil_const_unrolled(s: &str) -> usize {
 
 trait StrExt {
     fn floor_char_boundary_unrolled(&self, index: usize) -> usize;
+    fn floor_char_boundary_mask(&self, index: usize) -> usize;
     fn ceil_char_boundary_unrolled(&self, index: usize) -> usize;
 }
 
@@ -76,6 +87,49 @@ impl StrExt for str {
                 }
             }
             i
+        }
+    }
+
+    #[inline]
+    fn floor_char_boundary_mask(&self, index: usize) -> usize {
+        if index >= self.len() {
+            return self.len();
+        }
+
+        // A UTF-8 character is at most four bytes long, so the character boundary will reside
+        // within `self.as_bytes()[index - 3..=index]` if `index < self.len()`.
+        if index >= 3 {
+            // Read the four bytes as `u32`, use bitwise operations to mark boundary bytes, and
+            // count the number of leading/trailing zeros to find the last character boundary.
+
+            // SAFETY: `index < self.len()` and `index >= 3` ensure that the four bytes starting at
+            // `index - 3` are within bounds of `self`. `[u8; 4]` has the same alignment as `str`.
+            let bytes = unsafe { self.as_ptr().add(index - 3).cast::<[u8; 4]>().read() };
+            // Mask the top two bits of each byte and XOR with 0x80, leaving UTF-8 continuation
+            // bytes (0b10xxxxxx) zero and everything else non-zero.
+            let flags = (u32::from_ne_bytes(bytes) & 0xC0C0_C0C0) ^ 0x8080_8080;
+            debug_assert!(flags != 0);
+            #[cfg(target_endian = "little")]
+            let offset = flags.leading_zeros() / 8;
+            #[cfg(target_endian = "big")]
+            let offset = flags.trailing_zeros() / 8;
+            index - offset as usize
+        } else {
+            if self.as_bytes()[index].is_utf8_char_boundary() {
+                index
+            } else {
+                // The first byte of `str` must always be a character boundary, so we can assume
+                // `index > 0` here. Then, `index` is 2 or 1, and `self.as_bytes()[2]` is checked
+                // not to be a character boundary, so the answer will be 1 or 0.
+                debug_assert!(self.as_bytes()[0].is_utf8_char_boundary());
+                // SAFETY: `index > 0` and `index < self.len()`.
+                unsafe { assert_unchecked(self.len() > 1) };
+                if self.as_bytes()[1].is_utf8_char_boundary() {
+                    1
+                } else {
+                    0
+                }
+            }
         }
     }
 
@@ -113,15 +167,17 @@ impl U8Ext for u8 {
 
 #[cfg(test)]
 #[test]
-fn test_unrolled() {
-    let s = "Hello, 世界❗️❗️";
+fn compare_with_std() {
+    let s = "Hello, world κόσμος 世界 🌎❗️❗️";
     let r = s.chars().rev().collect::<String>();
 
     for i in 0..(s.len() + 8) {
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_unrolled(i));
+        assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_mask(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_unrolled(i));
 
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_unrolled(i));
+        assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_mask(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_unrolled(i));
     }
 }
