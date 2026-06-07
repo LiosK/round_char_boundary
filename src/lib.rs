@@ -124,27 +124,49 @@ impl StrExt for str {
 }
 
 macro_rules! gen_fn {
-    ($method:ident) => {
-        paste::paste! {
-            #[unsafe(no_mangle)]
-            pub fn [<dyn_idx_ $method>](s: &str, index: usize) -> usize {
-                s.$method(index)
-            }
+    ($method:ident, $name_dyn:ident, $name_const:ident) => {
+        #[unsafe(no_mangle)]
+        pub fn $name_dyn(s: &str, index: usize) -> usize {
+            s.$method(index)
+        }
 
-            #[unsafe(no_mangle)]
-            pub fn [<const_idx_ $method>](s: &str) -> usize {
-                s.$method(20)
-            }
+        #[unsafe(no_mangle)]
+        pub fn $name_const(s: &str) -> usize {
+            s.$method(20)
         }
     };
 }
 
-gen_fn!(floor_char_boundary);
-gen_fn!(floor_char_boundary_unrolled);
-gen_fn!(floor_char_boundary_mask);
-gen_fn!(ceil_char_boundary);
-gen_fn!(ceil_char_boundary_loop);
-gen_fn!(ceil_char_boundary_unrolled);
+gen_fn!(
+    floor_char_boundary,
+    dyn_index_floor_char_boundary_std,
+    const_index_floor_char_boundary_std
+);
+gen_fn!(
+    floor_char_boundary_unrolled,
+    dyn_index_floor_char_boundary_unrolled,
+    const_index_floor_char_boundary_unrolled
+);
+gen_fn!(
+    floor_char_boundary_mask,
+    dyn_index_floor_char_boundary_mask,
+    const_index_floor_char_boundary_mask
+);
+gen_fn!(
+    ceil_char_boundary,
+    dyn_index_ceil_char_boundary_std,
+    const_index_ceil_char_boundary_std
+);
+gen_fn!(
+    ceil_char_boundary_loop,
+    dyn_index_ceil_char_boundary_loop,
+    const_index_ceil_char_boundary_loop
+);
+gen_fn!(
+    ceil_char_boundary_unrolled,
+    dyn_index_ceil_char_boundary_unrolled,
+    const_index_ceil_char_boundary_unrolled
+);
 
 trait U8Ext: Copy {
     fn is_utf8_char_boundary(self) -> bool;

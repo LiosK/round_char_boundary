@@ -32,34 +32,56 @@ static TEXTS: LazyLock<Vec<String>> = LazyLock::new(|| {
 });
 
 macro_rules! gen_bench {
-    ($method:ident) => {
-        paste::paste! {
-            #[bench]
-            fn [<dyn_index_ $method>](b: &mut test::Bencher) {
-                let texts = &*TEXTS;
-                b.iter(|| {
-                    for text in texts {
-                        black_box(text.$method(black_box(LIMIT)));
-                    }
-                });
-            }
+    ($method:ident, $name_dyn:ident, $name_const:ident) => {
+        #[bench]
+        fn $name_dyn(b: &mut test::Bencher) {
+            let texts = &*TEXTS;
+            b.iter(|| {
+                for text in texts {
+                    black_box(text.$method(black_box(LIMIT)));
+                }
+            });
+        }
 
-            #[bench]
-            fn [<const_index_ $method>](b: &mut test::Bencher) {
-                let texts = &*TEXTS;
-                b.iter(|| {
-                    for text in texts {
-                        black_box(text.$method(LIMIT));
-                    }
-                });
-            }
+        #[bench]
+        fn $name_const(b: &mut test::Bencher) {
+            let texts = &*TEXTS;
+            b.iter(|| {
+                for text in texts {
+                    black_box(text.$method(LIMIT));
+                }
+            });
         }
     };
 }
 
-gen_bench!(floor_char_boundary);
-gen_bench!(floor_char_boundary_unrolled);
-gen_bench!(floor_char_boundary_mask);
-gen_bench!(ceil_char_boundary);
-gen_bench!(ceil_char_boundary_loop);
-gen_bench!(ceil_char_boundary_unrolled);
+gen_bench!(
+    floor_char_boundary,
+    dyn_index_floor_char_boundary_std,
+    const_index_floor_char_boundary_std
+);
+gen_bench!(
+    floor_char_boundary_unrolled,
+    dyn_index_floor_char_boundary_unrolled,
+    const_index_floor_char_boundary_unrolled
+);
+gen_bench!(
+    floor_char_boundary_mask,
+    dyn_index_floor_char_boundary_mask,
+    const_index_floor_char_boundary_mask
+);
+gen_bench!(
+    ceil_char_boundary,
+    dyn_index_ceil_char_boundary_std,
+    const_index_ceil_char_boundary_std
+);
+gen_bench!(
+    ceil_char_boundary_loop,
+    dyn_index_ceil_char_boundary_loop,
+    const_index_ceil_char_boundary_loop
+);
+gen_bench!(
+    ceil_char_boundary_unrolled,
+    dyn_index_ceil_char_boundary_unrolled,
+    const_index_ceil_char_boundary_unrolled
+);
