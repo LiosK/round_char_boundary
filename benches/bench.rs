@@ -76,6 +76,11 @@ gen_bench!(
     const_index_floor_char_boundary_mask
 );
 gen_bench!(
+    floor_char_boundary_loop,
+    dyn_index_floor_char_boundary_loop,
+    const_index_floor_char_boundary_loop
+);
+gen_bench!(
     ceil_char_boundary,
     dyn_index_ceil_char_boundary_std,
     const_index_ceil_char_boundary_std
