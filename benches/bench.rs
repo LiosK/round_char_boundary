@@ -31,122 +31,35 @@ static TEXTS: LazyLock<Vec<String>> = LazyLock::new(|| {
     texts
 });
 
-#[bench]
-fn floor_runtime_std(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary(black_box(LIMIT)));
+macro_rules! gen_bench {
+    ($method:ident) => {
+        paste::paste! {
+            #[bench]
+            fn [<dyn_index_ $method>](b: &mut test::Bencher) {
+                let texts = &*TEXTS;
+                b.iter(|| {
+                    for text in texts {
+                        black_box(text.$method(black_box(LIMIT)));
+                    }
+                });
+            }
+
+            #[bench]
+            fn [<const_index_ $method>](b: &mut test::Bencher) {
+                let texts = &*TEXTS;
+                b.iter(|| {
+                    for text in texts {
+                        black_box(text.$method(LIMIT));
+                    }
+                });
+            }
         }
-    });
+    };
 }
 
-#[bench]
-fn floor_runtime_unrolled(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary_unrolled(black_box(LIMIT)));
-        }
-    });
-}
-
-#[bench]
-fn floor_runtime_mask(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary_mask(black_box(LIMIT)));
-        }
-    });
-}
-
-#[bench]
-fn floor_const_std(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary(LIMIT));
-        }
-    });
-}
-
-#[bench]
-fn floor_const_unrolled(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary_unrolled(LIMIT));
-        }
-    });
-}
-
-#[bench]
-fn floor_const_mask(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.floor_char_boundary_mask(LIMIT));
-        }
-    });
-}
-
-#[bench]
-fn ceil_runtime_std(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary(black_box(LIMIT)));
-        }
-    });
-}
-
-#[bench]
-fn ceil_runtime_loop(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary_loop(black_box(LIMIT)));
-        }
-    });
-}
-
-#[bench]
-fn ceil_runtime_unrolled(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary_unrolled(black_box(LIMIT)));
-        }
-    });
-}
-
-#[bench]
-fn ceil_const_std(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary(LIMIT));
-        }
-    });
-}
-
-#[bench]
-fn ceil_const_loop(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary_loop(LIMIT));
-        }
-    });
-}
-
-#[bench]
-fn ceil_const_unrolled(b: &mut test::Bencher) {
-    let texts = &*TEXTS;
-    b.iter(|| {
-        for text in texts {
-            black_box(text.ceil_char_boundary_unrolled(LIMIT));
-        }
-    });
-}
+gen_bench!(floor_char_boundary);
+gen_bench!(floor_char_boundary_unrolled);
+gen_bench!(floor_char_boundary_mask);
+gen_bench!(ceil_char_boundary);
+gen_bench!(ceil_char_boundary_loop);
+gen_bench!(ceil_char_boundary_unrolled);

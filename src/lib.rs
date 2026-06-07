@@ -1,67 +1,5 @@
 use core::hint::assert_unchecked;
 
-const N: usize = 20;
-
-#[unsafe(no_mangle)]
-pub fn floor_runtime_std(s: &str, index: usize) -> usize {
-    s.floor_char_boundary(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn floor_runtime_unrolled(s: &str, index: usize) -> usize {
-    s.floor_char_boundary_unrolled(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn floor_runtime_mask(s: &str, index: usize) -> usize {
-    s.floor_char_boundary_mask(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn floor_const_std(s: &str) -> usize {
-    s.floor_char_boundary(N)
-}
-
-#[unsafe(no_mangle)]
-pub fn floor_const_unrolled(s: &str) -> usize {
-    s.floor_char_boundary_unrolled(N)
-}
-
-#[unsafe(no_mangle)]
-pub fn floor_const_mask(s: &str) -> usize {
-    s.floor_char_boundary_mask(N)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_runtime_std(s: &str, index: usize) -> usize {
-    s.ceil_char_boundary(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_runtime_loop(s: &str, index: usize) -> usize {
-    s.ceil_char_boundary_loop(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_runtime_unrolled(s: &str, index: usize) -> usize {
-    s.ceil_char_boundary_unrolled(index)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_const_std(s: &str) -> usize {
-    s.ceil_char_boundary(N)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_const_loop(s: &str) -> usize {
-    s.ceil_char_boundary_loop(N)
-}
-
-#[unsafe(no_mangle)]
-pub fn ceil_const_unrolled(s: &str) -> usize {
-    s.ceil_char_boundary_unrolled(N)
-}
-
 pub trait StrExt {
     fn floor_char_boundary_unrolled(&self, index: usize) -> usize;
     fn floor_char_boundary_mask(&self, index: usize) -> usize;
@@ -184,6 +122,29 @@ impl StrExt for str {
         }
     }
 }
+
+macro_rules! gen_fn {
+    ($method:ident) => {
+        paste::paste! {
+            #[unsafe(no_mangle)]
+            pub fn [<dyn_idx_ $method>](s: &str, index: usize) -> usize {
+                s.$method(index)
+            }
+
+            #[unsafe(no_mangle)]
+            pub fn [<const_idx_ $method>](s: &str) -> usize {
+                s.$method(20)
+            }
+        }
+    };
+}
+
+gen_fn!(floor_char_boundary);
+gen_fn!(floor_char_boundary_unrolled);
+gen_fn!(floor_char_boundary_mask);
+gen_fn!(ceil_char_boundary);
+gen_fn!(ceil_char_boundary_loop);
+gen_fn!(ceil_char_boundary_unrolled);
 
 trait U8Ext: Copy {
     fn is_utf8_char_boundary(self) -> bool;

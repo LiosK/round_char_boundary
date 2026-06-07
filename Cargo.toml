@@ -6,6 +6,7 @@ publish = false
 exclude = ["/.github/"]
 
 [dependencies]
+paste = "1.0.15"
 
 [dev-dependencies]
 rand = "0.10.1"
