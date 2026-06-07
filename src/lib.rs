@@ -1,19 +1,19 @@
 use core::hint::assert_unchecked;
 
 pub trait StrExt {
-    fn floor_char_boundary_unrolled(&self, index: usize) -> usize;
+    fn floor_char_boundary_approved(&self, index: usize) -> usize;
     fn floor_char_boundary_unrolled_safe(&self, index: usize) -> usize;
     fn floor_char_boundary_unrolled_nest(&self, index: usize) -> usize;
     fn floor_char_boundary_mask(&self, index: usize) -> usize;
     fn floor_char_boundary_loop(&self, index: usize) -> usize;
-    fn ceil_char_boundary_loop(&self, index: usize) -> usize;
+    fn ceil_char_boundary_approved(&self, index: usize) -> usize;
     fn ceil_char_boundary_loop_unsafe(&self, index: usize) -> usize;
     fn ceil_char_boundary_unrolled(&self, index: usize) -> usize;
 }
 
 impl StrExt for str {
     #[inline]
-    fn floor_char_boundary_unrolled(&self, index: usize) -> usize {
+    fn floor_char_boundary_approved(&self, index: usize) -> usize {
         if index >= self.len() {
             return self.len();
         }
@@ -168,7 +168,7 @@ impl StrExt for str {
     }
 
     #[inline]
-    fn ceil_char_boundary_loop(&self, index: usize) -> usize {
+    fn ceil_char_boundary_approved(&self, index: usize) -> usize {
         if index >= self.len() {
             self.len()
         } else {
@@ -248,9 +248,9 @@ gen_fn!(
     const_index_floor_char_boundary_std
 );
 gen_fn!(
-    floor_char_boundary_unrolled,
-    dyn_index_floor_char_boundary_unrolled,
-    const_index_floor_char_boundary_unrolled
+    floor_char_boundary_approved,
+    dyn_index_floor_char_boundary_approved,
+    const_index_floor_char_boundary_approved
 );
 gen_fn!(
     floor_char_boundary_unrolled_safe,
@@ -278,9 +278,9 @@ gen_fn!(
     const_index_ceil_char_boundary_std
 );
 gen_fn!(
-    ceil_char_boundary_loop,
-    dyn_index_ceil_char_boundary_loop,
-    const_index_ceil_char_boundary_loop
+    ceil_char_boundary_approved,
+    dyn_index_ceil_char_boundary_approved,
+    const_index_ceil_char_boundary_approved
 );
 gen_fn!(
     ceil_char_boundary_loop_unsafe,
@@ -311,7 +311,7 @@ fn compare_with_std() {
     let r = s.chars().rev().collect::<String>();
 
     for i in 0..(s.len() + 8) {
-        assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_unrolled(i));
+        assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_approved(i));
         assert_eq!(
             s.floor_char_boundary(i),
             s.floor_char_boundary_unrolled_safe(i)
@@ -322,11 +322,11 @@ fn compare_with_std() {
         );
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_mask(i));
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_loop(i));
-        assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_loop(i));
+        assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_approved(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_loop_unsafe(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_unrolled(i));
 
-        assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_unrolled(i));
+        assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_approved(i));
         assert_eq!(
             r.floor_char_boundary(i),
             r.floor_char_boundary_unrolled_safe(i)
@@ -337,7 +337,7 @@ fn compare_with_std() {
         );
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_mask(i));
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_loop(i));
-        assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_loop(i));
+        assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_approved(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_loop_unsafe(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_unrolled(i));
     }
@@ -349,9 +349,9 @@ fn floor_char_boundary_test_adapted_from_std() {
     fn check_many(s: &str, arg: impl IntoIterator<Item = usize>, ret: usize) {
         for idx in arg {
             assert_eq!(
-                s.floor_char_boundary_unrolled(idx),
+                s.floor_char_boundary_approved(idx),
                 ret,
-                "{:?}.floor_char_boundary_unrolled({:?}) != {:?}",
+                "{:?}.floor_char_boundary_approved({:?}) != {:?}",
                 s,
                 idx,
                 ret
@@ -435,9 +435,9 @@ fn ceil_char_boundary_test_adapted_from_std() {
     fn check_many(s: &str, arg: impl IntoIterator<Item = usize>, ret: usize) {
         for idx in arg {
             assert_eq!(
-                s.ceil_char_boundary_loop(idx),
+                s.ceil_char_boundary_approved(idx),
                 ret,
-                "{:?}.ceil_char_boundary_loop({:?}) != {:?}",
+                "{:?}.ceil_char_boundary_approved({:?}) != {:?}",
                 s,
                 idx,
                 ret

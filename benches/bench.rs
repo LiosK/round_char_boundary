@@ -61,9 +61,9 @@ gen_bench!(
     const_index_floor_char_boundary_std
 );
 gen_bench!(
-    floor_char_boundary_unrolled,
-    dyn_index_floor_char_boundary_unrolled,
-    const_index_floor_char_boundary_unrolled
+    floor_char_boundary_approved,
+    dyn_index_floor_char_boundary_approved,
+    const_index_floor_char_boundary_approved
 );
 gen_bench!(
     floor_char_boundary_unrolled_safe,
@@ -91,9 +91,9 @@ gen_bench!(
     const_index_ceil_char_boundary_std
 );
 gen_bench!(
-    ceil_char_boundary_loop,
-    dyn_index_ceil_char_boundary_loop,
-    const_index_ceil_char_boundary_loop
+    ceil_char_boundary_approved,
+    dyn_index_ceil_char_boundary_approved,
+    const_index_ceil_char_boundary_approved
 );
 gen_bench!(
     ceil_char_boundary_loop_unsafe,
