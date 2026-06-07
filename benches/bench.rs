@@ -105,3 +105,8 @@ gen_bench!(
     dyn_index_ceil_char_boundary_unrolled,
     const_index_ceil_char_boundary_unrolled
 );
+gen_bench!(
+    ceil_char_boundary_unrolled_nest,
+    dyn_index_ceil_char_boundary_unrolled_nest,
+    const_index_ceil_char_boundary_unrolled_nest
+);
