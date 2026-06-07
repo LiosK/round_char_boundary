@@ -71,11 +71,6 @@ gen_bench!(
     const_index_floor_char_boundary_unrolled_safe
 );
 gen_bench!(
-    floor_char_boundary_unrolled_nest,
-    dyn_index_floor_char_boundary_unrolled_nest,
-    const_index_floor_char_boundary_unrolled_nest
-);
-gen_bench!(
     floor_char_boundary_mask,
     dyn_index_floor_char_boundary_mask,
     const_index_floor_char_boundary_mask
@@ -104,9 +99,4 @@ gen_bench!(
     ceil_char_boundary_unrolled,
     dyn_index_ceil_char_boundary_unrolled,
     const_index_ceil_char_boundary_unrolled
-);
-gen_bench!(
-    ceil_char_boundary_unrolled_nest,
-    dyn_index_ceil_char_boundary_unrolled_nest,
-    const_index_ceil_char_boundary_unrolled_nest
 );

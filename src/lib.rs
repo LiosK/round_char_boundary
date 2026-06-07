@@ -3,13 +3,11 @@ use core::hint::assert_unchecked;
 pub trait StrExt {
     fn floor_char_boundary_approved(&self, index: usize) -> usize;
     fn floor_char_boundary_unrolled_safe(&self, index: usize) -> usize;
-    fn floor_char_boundary_unrolled_nest(&self, index: usize) -> usize;
     fn floor_char_boundary_mask(&self, index: usize) -> usize;
     fn floor_char_boundary_loop(&self, index: usize) -> usize;
     fn ceil_char_boundary_approved(&self, index: usize) -> usize;
     fn ceil_char_boundary_loop_unsafe(&self, index: usize) -> usize;
     fn ceil_char_boundary_unrolled(&self, index: usize) -> usize;
-    fn ceil_char_boundary_unrolled_nest(&self, index: usize) -> usize;
 }
 
 impl StrExt for str {
@@ -61,37 +59,6 @@ impl StrExt for str {
                     i -= 1;
                     if !self.as_bytes()[i].is_utf8_char_boundary() {
                         // `self.as_bytes()[0]` is always a char boundary with valid `&str`
-                        debug_assert!(i > 0);
-                        i -= 1;
-                        // The character boundary will be within four bytes of the index
-                        debug_assert!(self.as_bytes()[i].is_utf8_char_boundary());
-                    }
-                }
-            }
-            i
-        }
-    }
-
-    #[inline]
-    fn floor_char_boundary_unrolled_nest(&self, index: usize) -> usize {
-        if index >= self.len() {
-            self.len()
-        } else {
-            // Unlike `ceil_char_boundary`, the loop is unrolled manually to prevent the compiler
-            // from generating excessive unrolled loop bodies when `index` is statically known.
-            let mut i = index;
-            // The first byte of `&str` must always be a char boundary, so we can assume `i > 0`
-            // below if `self.as_bytes()[i]` is not a char boundary.
-            debug_assert!(self.as_bytes()[0].is_utf8_char_boundary());
-            if !self.as_bytes()[i].is_utf8_char_boundary() {
-                // SAFETY: `self.as_bytes()[0]` is always a char boundary with valid `&str`
-                unsafe { assert_unchecked(i > 0) };
-                i -= 1;
-                if !self.as_bytes()[i].is_utf8_char_boundary() {
-                    // SAFETY: `self.as_bytes()[0]` is always a char boundary with valid `&str`
-                    unsafe { assert_unchecked(i > 0) };
-                    i -= 1;
-                    if !self.as_bytes()[i].is_utf8_char_boundary() {
                         debug_assert!(i > 0);
                         i -= 1;
                         // The character boundary will be within four bytes of the index
@@ -231,26 +198,6 @@ impl StrExt for str {
         );
         index + 3
     }
-
-    #[inline]
-    fn ceil_char_boundary_unrolled_nest(&self, index: usize) -> usize {
-        if index >= self.len() {
-            self.len()
-        } else if self.as_bytes()[index].is_utf8_char_boundary() {
-            index
-        } else {
-            let mut i = index + 1;
-            if i < self.len() && !self.as_bytes()[i].is_utf8_char_boundary() {
-                i += 1;
-                if i < self.len() && !self.as_bytes()[i].is_utf8_char_boundary() {
-                    i += 1;
-                    // The character boundary will be within four bytes of the index
-                    debug_assert!(i == self.len() || self.as_bytes()[i].is_utf8_char_boundary());
-                }
-            }
-            i
-        }
-    }
 }
 
 macro_rules! gen_fn {
@@ -283,11 +230,6 @@ gen_fn!(
     const_index_floor_char_boundary_unrolled_safe
 );
 gen_fn!(
-    floor_char_boundary_unrolled_nest,
-    dyn_index_floor_char_boundary_unrolled_nest,
-    const_index_floor_char_boundary_unrolled_nest
-);
-gen_fn!(
     floor_char_boundary_mask,
     dyn_index_floor_char_boundary_mask,
     const_index_floor_char_boundary_mask
@@ -317,11 +259,6 @@ gen_fn!(
     dyn_index_ceil_char_boundary_unrolled,
     const_index_ceil_char_boundary_unrolled
 );
-gen_fn!(
-    ceil_char_boundary_unrolled_nest,
-    dyn_index_ceil_char_boundary_unrolled_nest,
-    const_index_ceil_char_boundary_unrolled_nest
-);
 
 trait U8Ext: Copy {
     fn is_utf8_char_boundary(self) -> bool;
@@ -346,38 +283,22 @@ fn compare_with_std() {
             s.floor_char_boundary(i),
             s.floor_char_boundary_unrolled_safe(i)
         );
-        assert_eq!(
-            s.floor_char_boundary(i),
-            s.floor_char_boundary_unrolled_nest(i)
-        );
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_mask(i));
         assert_eq!(s.floor_char_boundary(i), s.floor_char_boundary_loop(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_approved(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_loop_unsafe(i));
         assert_eq!(s.ceil_char_boundary(i), s.ceil_char_boundary_unrolled(i));
-        assert_eq!(
-            s.ceil_char_boundary(i),
-            s.ceil_char_boundary_unrolled_nest(i)
-        );
 
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_approved(i));
         assert_eq!(
             r.floor_char_boundary(i),
             r.floor_char_boundary_unrolled_safe(i)
         );
-        assert_eq!(
-            r.floor_char_boundary(i),
-            r.floor_char_boundary_unrolled_nest(i)
-        );
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_mask(i));
         assert_eq!(r.floor_char_boundary(i), r.floor_char_boundary_loop(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_approved(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_loop_unsafe(i));
         assert_eq!(r.ceil_char_boundary(i), r.ceil_char_boundary_unrolled(i));
-        assert_eq!(
-            r.ceil_char_boundary(i),
-            r.ceil_char_boundary_unrolled_nest(i)
-        );
     }
 }
 
@@ -398,14 +319,6 @@ fn floor_char_boundary_test_adapted_from_std() {
                 s.floor_char_boundary_unrolled_safe(idx),
                 ret,
                 "{:?}.floor_char_boundary_unrolled_safe({:?}) != {:?}",
-                s,
-                idx,
-                ret
-            );
-            assert_eq!(
-                s.floor_char_boundary_unrolled_nest(idx),
-                ret,
-                "{:?}.floor_char_boundary_unrolled_nest({:?}) != {:?}",
                 s,
                 idx,
                 ret
@@ -492,14 +405,6 @@ fn ceil_char_boundary_test_adapted_from_std() {
                 s.ceil_char_boundary_unrolled(idx),
                 ret,
                 "{:?}.ceil_char_boundary_unrolled({:?}) != {:?}",
-                s,
-                idx,
-                ret
-            );
-            assert_eq!(
-                s.ceil_char_boundary_unrolled_nest(idx),
-                ret,
-                "{:?}.ceil_char_boundary_unrolled_nest({:?}) != {:?}",
                 s,
                 idx,
                 ret
