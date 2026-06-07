@@ -66,6 +66,11 @@ gen_bench!(
     const_index_floor_char_boundary_unrolled
 );
 gen_bench!(
+    floor_char_boundary_unrolled_safe,
+    dyn_index_floor_char_boundary_unrolled_safe,
+    const_index_floor_char_boundary_unrolled_safe
+);
+gen_bench!(
     floor_char_boundary_unrolled_nest,
     dyn_index_floor_char_boundary_unrolled_nest,
     const_index_floor_char_boundary_unrolled_nest
