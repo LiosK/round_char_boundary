@@ -90,3 +90,63 @@ fn floor_const_mask(b: &mut test::Bencher) {
         }
     });
 }
+
+#[bench]
+fn ceil_runtime_std(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary(black_box(LIMIT)));
+        }
+    });
+}
+
+#[bench]
+fn ceil_runtime_loop(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary_loop(black_box(LIMIT)));
+        }
+    });
+}
+
+#[bench]
+fn ceil_runtime_unrolled(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary_unrolled(black_box(LIMIT)));
+        }
+    });
+}
+
+#[bench]
+fn ceil_const_std(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary(LIMIT));
+        }
+    });
+}
+
+#[bench]
+fn ceil_const_loop(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary_loop(LIMIT));
+        }
+    });
+}
+
+#[bench]
+fn ceil_const_unrolled(b: &mut test::Bencher) {
+    let texts = &*TEXTS;
+    b.iter(|| {
+        for text in texts {
+            black_box(text.ceil_char_boundary_unrolled(LIMIT));
+        }
+    });
+}
