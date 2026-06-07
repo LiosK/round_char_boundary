@@ -52,7 +52,7 @@ pub fn ceil_const_loop(s: &str) -> usize {
     s.ceil_char_boundary_loop(N)
 }
 
-trait StrExt {
+pub trait StrExt {
     fn floor_char_boundary_unrolled(&self, index: usize) -> usize;
     fn floor_char_boundary_mask(&self, index: usize) -> usize;
     fn ceil_char_boundary_loop(&self, index: usize) -> usize;
