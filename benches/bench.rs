@@ -96,6 +96,11 @@ gen_bench!(
     const_index_ceil_char_boundary_loop
 );
 gen_bench!(
+    ceil_char_boundary_loop_unsafe,
+    dyn_index_ceil_char_boundary_loop_unsafe,
+    const_index_ceil_char_boundary_loop_unsafe
+);
+gen_bench!(
     ceil_char_boundary_unrolled,
     dyn_index_ceil_char_boundary_unrolled,
     const_index_ceil_char_boundary_unrolled
